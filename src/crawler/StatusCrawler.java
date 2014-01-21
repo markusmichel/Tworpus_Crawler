@@ -2,6 +2,7 @@ package crawler;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.HashMap;
 
 import twitter.OnNewStatusListener;
 import twitter.StatusProcessor;
@@ -17,10 +18,14 @@ public class StatusCrawler {
 	private ConfigurationBuilder config;
 	private CrawlerApp app;
 	private BufferedWriter out;
+	private int current_threads = 0;
 
+	private HashMap<Long, Thread> processors;
+	
 	public StatusCrawler(CrawlerApp app) {
 		app.receiveUpdateOfDebugOutput("created crawler");
 		this.app = app;
+		processors = new HashMap<Long, Thread>();
 	}
 
 	public void start() {
@@ -55,6 +60,20 @@ public class StatusCrawler {
 		twitterStream = twitterStreamFactory.getInstance();
 		twitterStream.addListener(onStatusListener);
 	}
+	
+	
+	public synchronized void registerProcessor() {
+		current_threads++;
+	}
+	
+	public synchronized void unregisterProcessor(Long id) {
+		if(current_threads > 0) {
+			current_threads--;
+		}
+		processors.remove(id);
+//		System.out.println(current_threads + "/" + StatusCrawlerConfig.getMaxThreads() + " threads used");
+		System.gc();
+	}
 
 	private void setAuth() {
 		config = new ConfigurationBuilder();
@@ -66,7 +85,13 @@ public class StatusCrawler {
 	}
 
 	public void processNewStatus(Status status) {
-		new Thread(new StatusProcessor(status, app)).start();
+		if(current_threads <= StatusCrawlerConfig.getMaxThreads()) {
+			Long id = new Long(System.currentTimeMillis());
+			processors.put(id, new Thread(new StatusProcessor(id, status, app, this)));
+			processors.get(id).start();
+		} else {
+//			System.out.println("queue is full!");
+		}
 	}
 
 }

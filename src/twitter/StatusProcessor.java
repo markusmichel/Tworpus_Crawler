@@ -7,6 +7,7 @@ import twitter4j.Status;
 import com.cybozu.labs.langdetect.LangDetectException;
 
 import crawler.CrawlerApp;
+import crawler.StatusCrawler;
 import crawler.StatusCrawlerConfig;
 import db.DataBase;
 
@@ -15,17 +16,22 @@ public class StatusProcessor implements Runnable {
 	private Status status;
 	private DataBase db;
 	private CrawlerApp app;
+	private StatusCrawler crawler;
 	private LanguageDetector detector;
+	private long id;
 	
-	public StatusProcessor(Status status, CrawlerApp app) {
+	public StatusProcessor(long id, Status status, CrawlerApp app, StatusCrawler crawler) {
 		this.status = status;
 		this.app = app;
+		this.crawler = crawler;
+		this.id = id;
 		try {
 			detector = new LanguageDetector();
 		} catch (LangDetectException e) {
 			detector = null;
 		}
 		db = new DataBase();
+		crawler.registerProcessor();
 	}
 	
 	private void writeIntoDatabase() {
@@ -39,7 +45,6 @@ public class StatusProcessor implements Runnable {
 		}
 		
 		if(!StatusCrawlerConfig.isInLangs(lang)) {
-			System.out.println(lang);
 			return;
 		}
 		
@@ -56,12 +61,10 @@ public class StatusProcessor implements Runnable {
 		long tweet_timestamp = status.getCreatedAt().getTime();
 		int tweet_timezoneoffset = status.getUser().getUtcOffset() / 3600;
 		
-		int tweet_isfavourited = (status.isFavorited()) ? 1 : 0;
-		long tweet_isretweeted = status.getRetweetCount();
-		if(tweet_isretweeted != 0) System.out.println(tweet_isretweeted);
+		
 
 		String text = status.getText().replaceAll("[^a-zA-Z0-9 ]+", "");
-		int tweet_charcount = text.replaceAll(" ", "").length();
+		int tweet_charcount = text.length();
 		int tweet_wordcount = text.split(" ").length;
 
 		int user_location = -1;
@@ -83,18 +86,22 @@ public class StatusProcessor implements Runnable {
 			}
 		}
 		
-		try {
-		db.insertTweet(tweet_id, user_id, tweet_timestamp, tweet_timezoneoffset,
-				tweet_isfavourited, tweet_isretweeted, tweet_charcount,
+		db.insertTweetAndCloseDatabase(tweet_id, user_id, tweet_timestamp, tweet_timezoneoffset, tweet_charcount,
 				tweet_wordcount, user_location, user_lang, tweet_lang, tweet_latitude,
 				tweet_longitude);
-		} finally {
-			db.close();
-		}
 	}
 	
 	public void run() {
 		writeIntoDatabase();
+		finish();
+		crawler.unregisterProcessor(id);
+	}
+
+	public void finish() {
+		status = null;
+		db.close();
+		db = null;
+		System.gc();
 	}
 
 }

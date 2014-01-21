@@ -18,6 +18,7 @@ public class StatusCrawlerConfig {
 	private static String DB_PASSWORD;
 	private static String DB_DATABASE_NAME;
 	private static String PROFILE_DIR;
+	private static int MAX_THREADS = 60;
 	private static String[] LANGS;
 	
 	
@@ -48,6 +49,7 @@ public class StatusCrawlerConfig {
 			DB_PASSWORD = configValues.get("DB_PASSWORD");
 			DB_DATABASE_NAME = configValues.get("DB_DATABASE_NAME");
 			PROFILE_DIR = configValues.get("PROFILE_DIR").replace("/", File.separator);
+			MAX_THREADS = Integer.valueOf(configValues.get("MAX_THREADS"));
 			LANGS = configValues.get("LANGS").split(",");
 			if(DB_HOST!=null && DB_PORT!=null && DB_USER!=null && DB_PASSWORD!= null && DB_DATABASE_NAME!=null && DB_DATABASE_NAME!=PROFILE_DIR) {
 				return true;
@@ -85,6 +87,10 @@ public class StatusCrawlerConfig {
 	
 	public static String getPROFILE_DIR() {
 		return PROFILE_DIR;
+	}
+	
+	public static int getMaxThreads() {
+		return MAX_THREADS;
 	}
 	
 	public static boolean isInLangs(String lang) {

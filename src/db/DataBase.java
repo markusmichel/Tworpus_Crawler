@@ -49,10 +49,18 @@ public class DataBase {
 			stmt.setString(1, lang);
 			stmt.executeUpdate();
 		} catch (MySQLIntegrityConstraintViolationException e) {
+			
 		} catch (SQLException e) {
 			
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-
+		stmt = null;
 		return getLangID(lang);
 	}
 
@@ -69,7 +77,16 @@ public class DataBase {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+
+		stmt = null;
 	}
 	
 	public synchronized int insertLocation(String location) {
@@ -84,8 +101,16 @@ public class DataBase {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
+		stmt = null;
 		return getLocationID(location);
 	}
 
@@ -101,14 +126,23 @@ public class DataBase {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
+		stmt = null;
 		return getTagID(tag);
 	}
 
 	public synchronized int getLangID(String lang) {
 		if (conn == null)
 			return -1;
+		int result_value = -1;
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn
@@ -116,18 +150,27 @@ public class DataBase {
 			stmt.setString(1, lang);
 			ResultSet result = stmt.executeQuery();
 			if (result.next()) {
-				return result.getInt(1);
+				result_value =  result.getInt(1);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 
-		return -1;
+		stmt = null;
+		return result_value;
 	}
 
 	public synchronized int getLocationID(String location) {
 		if (conn == null)
 			return -1;
+		int result_value = -1;
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn
@@ -135,18 +178,27 @@ public class DataBase {
 			stmt.setString(1, location);
 			ResultSet result = stmt.executeQuery();
 			if (result.next()) {
-				return result.getInt(1);
+				result_value =  result.getInt(1);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-
-		return -1;
+ 
+		stmt = null;
+		return result_value;
 	}
 
 	public synchronized int getTagID(String tag) {
 		if (conn == null)
 			return -1;
+		int result_value = -1;
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn
@@ -154,18 +206,25 @@ public class DataBase {
 			stmt.setString(1, tag);
 			ResultSet result = stmt.executeQuery();
 			if (result.next()) {
-				return result.getInt(1);
+				result_value = result.getInt(1);
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
-
-		return -1;
+ 
+		stmt = null;
+		return result_value;
 	}
 
-	public synchronized void insertTweet(long tweet_id, long user_id, long tweet_timestamp,
-			int tweet_timezoneoffset, int tweet_isfavourited,
-			long tweet_isretweeted, int tweet_charcount, int tweet_wordcount,
+	public synchronized void insertTweetAndCloseDatabase(long tweet_id, long user_id, long tweet_timestamp,
+			int tweet_timezoneoffset, int tweet_charcount, int tweet_wordcount,
 			int user_location, int user_lang, int tweet_lang, double tweet_latitude,
 			double tweet_longitude) {
 		
@@ -174,27 +233,36 @@ public class DataBase {
 		PreparedStatement stmt = null;
 		try {
 			stmt = conn
-					.prepareStatement("INSERT IGNORE INTO tweets(_id, _userid, _timestamp, _timezoneoffset, _isfavourited, _isretweeted, _charcount, _wordcount, _location, _userlang, _tweetlang, _latitude, _longitude) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)");
+					.prepareStatement("INSERT IGNORE INTO tweets(_id, _userid, _timestamp, _timezoneoffset, _charcount, _wordcount, _location, _userlang, _tweetlang, _latitude, _longitude) VALUES(?,?,?,?,?,?,?,?,?,?,?)");
 			stmt.setLong(1, tweet_id);
 			stmt.setLong(2, user_id);
 			stmt.setLong(3, tweet_timestamp);
 			stmt.setInt(4, tweet_timezoneoffset);
-			stmt.setInt(5, tweet_isfavourited);
-			stmt.setLong(6, tweet_isretweeted);
-			stmt.setInt(7, tweet_charcount);
-			stmt.setInt(8, tweet_wordcount);
-			stmt.setInt(9, user_location);
-			stmt.setInt(10, user_lang);
-			stmt.setInt(11, tweet_lang);
-			stmt.setDouble(12, tweet_latitude);
-			stmt.setDouble(13, tweet_longitude);
+			stmt.setInt(5, tweet_charcount);
+			stmt.setInt(6, tweet_wordcount);
+			stmt.setInt(7, user_location);
+			stmt.setInt(8, user_lang);
+			stmt.setInt(9, tweet_lang);
+			stmt.setDouble(10, tweet_latitude);
+			stmt.setDouble(11, tweet_longitude);
 			stmt.executeUpdate();
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} finally {
+			try {
+				stmt.close();
+				close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
+		
+
+		stmt = null;
 	}
 
-	public void close() {
+	public synchronized void close() {
 		if(conn == null) return;
 		try {
 			conn.close();

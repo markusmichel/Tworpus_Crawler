@@ -1,11 +1,12 @@
 package twitter;
 
-import crawler.StatusCrawler;
 import twitter4j.StallWarning;
 import twitter4j.Status;
 import twitter4j.StatusDeletionNotice;
+import twitter4j.StatusListener;
+import crawler.StatusCrawler;
 
-public class OnNewStatusListener implements twitter4j.StatusListener {
+public class OnNewStatusListener implements StatusListener {
 	
 	private StatusCrawler crawler;
 
@@ -38,6 +39,8 @@ public class OnNewStatusListener implements twitter4j.StatusListener {
 	}
 
 	@Override
-	public void onStallWarning(StallWarning arg0) {
+	public void onStallWarning(StallWarning warning) {
+		// TODO Auto-generated method stub
+		
 	}
 }
