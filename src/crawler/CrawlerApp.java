@@ -5,11 +5,6 @@ import java.io.IOException;
 import com.cybozu.labs.langdetect.DetectorFactory;
 import com.cybozu.labs.langdetect.LangDetectException;
 
-import db.DataBase;
-import db.PersistManager;
-import db.Tweet;
-
-
 public class CrawlerApp {
 	
 	private static CrawlerApp app;
