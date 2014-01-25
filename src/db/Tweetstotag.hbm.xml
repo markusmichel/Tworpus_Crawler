@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+<!-- Generated 24.01.2014 10:16:50 by Hibernate Tools 3.6.0 -->
+<hibernate-mapping>
+  <class catalog="tweets" name="db.TweetToTag" table="tweetstotags">
+    <composite-id class="db.TweetToTagid" name="id">
+      <key-property name="tweetid" type="long">
+        <column name="_tweetid"/>
+      </key-property>
+      <key-property name="tagid" type="int">
+        <column name="_tagid"/>
+      </key-property>
+    </composite-id>
+  </class>
+</hibernate-mapping>

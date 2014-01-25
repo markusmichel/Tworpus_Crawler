@@ -5,3 +5,12 @@
 *.jar
 *.war
 *.ear
+/nbproject/
+/extlibs/
+/build/
+/dist/
+
+src/hibernate.cfg.xml
+./crawler_config.cfg
+./manifest.mf
+./build.xml
