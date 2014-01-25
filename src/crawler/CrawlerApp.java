@@ -6,6 +6,8 @@ import com.cybozu.labs.langdetect.DetectorFactory;
 import com.cybozu.labs.langdetect.LangDetectException;
 
 import db.DataBase;
+import db.PersistManager;
+import db.Tweet;
 
 
 public class CrawlerApp {
@@ -14,18 +16,29 @@ public class CrawlerApp {
 	private StatusCrawler crawler;
 	
 	public static void main(String[] args) throws LangDetectException, IOException {
-		try {
-			StatusCrawlerConfig.loadConfig("crawler_config.cfg");
-		} catch (InvalidConfigException e) {
-			System.exit(100);
-		}
+            ///*
+            try {
+                StatusCrawlerConfig.loadConfig("crawler_config.cfg");
+            } catch (InvalidConfigException e) {
+                System.exit(100);
+            }
 
-		
-		try{
-			startCrawler();
-		} catch(Exception e) {
-			startCrawler();
-		}
+            try {
+                startCrawler();
+            } catch (Exception e) {
+                startCrawler();
+            }
+            //*/
+            
+            /*
+            for(int i=0; i<12; i++) {
+                Tweet tweet = new Tweet();
+                tweet.setTimestamp(000000);
+                tweet.setCharcount((byte)i);
+                tweet.setWordcount((byte)i);
+                PersistManager.getInstance().add(tweet);
+            }
+            */
 	}
 	
 	public static void startCrawler() {
@@ -43,7 +56,6 @@ public class CrawlerApp {
 			e.printStackTrace();
 		}
 		
-		DataBase.initDataBase(StatusCrawlerConfig.getDB_HOST(), StatusCrawlerConfig.getDB_PORT(), StatusCrawlerConfig.getDB_DATABASE_NAME(), StatusCrawlerConfig.getDB_USER(), StatusCrawlerConfig.getDB_PASSWORD());
 		app = new CrawlerApp();
 		app.crawlTweets();
 	}
