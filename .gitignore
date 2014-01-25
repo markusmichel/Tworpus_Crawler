@@ -10,7 +10,10 @@
 /build/
 /dist/
 
-src/hibernate.cfg.xml
-crawler_config.cfg
+src/hibernate.cfg.xm
 manifest.mf
 build.xml
+
+crawler_config.cfg
+
+src/hibernate.cfg.xml
