@@ -1,15 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package crawler;
 
-import java.util.ArrayList;
-import java.util.EmptyStackException;
-import java.util.Hashtable;
-import java.util.Stack;
+import java.util.Comparator;
+import java.util.NoSuchElementException;
+import java.util.PriorityQueue;
 import twitter.StatusProcessor;
 
 /**
@@ -19,13 +12,13 @@ import twitter.StatusProcessor;
 public class StatusProcessorPool {
     
     
-    private Stack<Long> availableProcessors;
-    private Hashtable<Long, StatusProcessor> processors;
-    private int capacity;
+    private PriorityQueue<StatusProcessor> processors;
+    private final int capacity;
+    private long idCounter;
     
     public StatusProcessorPool(int capacity) {
-        availableProcessors = new Stack<>();
-        processors = new Hashtable<>(capacity);
+        StatusProcessorComparator comparator = new StatusProcessorComparator();
+        processors = new PriorityQueue<StatusProcessor>(capacity, comparator);
         this.capacity = capacity;
     }
     
@@ -38,16 +31,15 @@ public class StatusProcessorPool {
     public StatusProcessor get() throws Exception {
         try {
             // There are processors available -> return one
-            Long id = availableProcessors.pop();
-            return processors.get(id);
+            return processors.remove();
             
-        } catch(EmptyStackException e) {
+        } catch(NoSuchElementException e) {
             // No processor available but capacity not reached
             // -> create new processor
             if(processors.size() < capacity) {
-                long id = System.currentTimeMillis();
+                long id = idCounter++;
                 StatusProcessor processor = new StatusProcessor(id, this);
-                processors.put(id, processor);
+                //processors.add(processor);
                 return processor;
             } else {
                 // No processor available and maximum capacity reached
@@ -56,7 +48,18 @@ public class StatusProcessorPool {
         }
     }
     
-    public void setProcessAsleep(Long id) {
-        availableProcessors.push(id);
+    public void setProcessAsleep(StatusProcessor processor) {
+        processors.add(processor);
+    }
+    
+    class StatusProcessorComparator implements Comparator<StatusProcessor> {
+
+        @Override
+        public int compare(StatusProcessor p1, StatusProcessor p2) {
+            if(p1.getCount() < p2.getCount()) return -1;
+            else if(p1.getCount() > p2.getCount()) return 1;
+            return 0;
+        }
+        
     }
 }
