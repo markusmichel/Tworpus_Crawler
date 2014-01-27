@@ -2,11 +2,10 @@
 .settings/
 
 # Package Files #
-*.jar
+!extlibs/**/*.jar
 *.war
 *.ear
 /nbproject/
-/extlibs/
 /build/
 /dist/
 
