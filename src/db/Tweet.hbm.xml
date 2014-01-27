@@ -5,7 +5,7 @@
   <class catalog="tweets" name="db.Tweet" table="tweets">
     <id name="id" type="long" unsaved-value="null">
       <column name="_id"/>
-      <!--<generator class="increment"/>-->
+      <generator class="assigned"/>
     </id>
     <property name="timestamp" type="long">
       <column name="_timestamp" not-null="true"/>
