@@ -12,6 +12,7 @@ import db.HibernateUtil;
 import db.Tweet;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import twitter4j.json.DataObjectFactory;
 
 public class StatusProcessor implements Runnable {
 
@@ -43,7 +44,18 @@ public class StatusProcessor implements Runnable {
     public Status getStatus() {
         return this.status;
     }
-
+    
+    /**
+     * Return the number of items in the processor's session
+     * which aren't yet persisted to the database.
+     */
+    public int getCount() {
+        return count;
+    }
+    
+    /**
+     * Creates a hibernate compatible Tweet object.
+     */
     private Tweet createTweet() {
         String lang = "unknown";
         if (detector != null) {
@@ -53,7 +65,10 @@ public class StatusProcessor implements Runnable {
                 lang = "unknown";
             }
         }
-
+        
+        String json = DataObjectFactory.getRawJSON(status);
+        String langCodeTmp = status.getIsoLanguageCode();
+        String textTmp = status.getText();
         if (!StatusCrawlerConfig.isInLangs(lang)) {
             return null;
         }
@@ -108,7 +123,6 @@ public class StatusProcessor implements Runnable {
     
     private void save(Tweet tweet) {
         if(tweet == null) return;
-        
         count++;
         try {
             session.save(tweet);
@@ -116,8 +130,9 @@ public class StatusProcessor implements Runnable {
             e.printStackTrace();
         }
         
+        System.out.println("count = " + count + " id=" + id);
         if(count >= 100) {
-            System.out.println("save at count = " + count);
+            System.out.println("save at count = " + count + " id=" + id);
             count = 0;
             session.flush();
             session.clear();
@@ -134,8 +149,9 @@ public class StatusProcessor implements Runnable {
     }
 
     public void finish() {
+        System.out.println("Push processor back to pool: " + id);
         status = null;
-        pool.setProcessAsleep(id);
+        pool.setProcessAsleep(this);
     }
 
 }
