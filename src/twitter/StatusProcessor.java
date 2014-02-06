@@ -1,10 +1,7 @@
 package twitter;
 
-import language.LanguageDetector;
 import twitter4j.HashtagEntity;
 import twitter4j.Status;
-
-import com.cybozu.labs.langdetect.LangDetectException;
 
 import crawler.StatusCrawlerConfig;
 import crawler.StatusProcessorPool;
@@ -18,7 +15,6 @@ public class StatusProcessor implements Runnable {
 
     private Status status;
     private int count;
-    private LanguageDetector detector;
     private final long id;
     private final StatusProcessorPool pool;
     private Session session;
@@ -29,12 +25,6 @@ public class StatusProcessor implements Runnable {
         this.id = id;
         session = HibernateUtil.getSessionFactory().openSession();
         transaction = session.beginTransaction();
-        
-        try {
-            detector = new LanguageDetector();
-        } catch (LangDetectException e) {
-            detector = null;
-        }
     }
 
     public void setStatus(Status status) {
@@ -53,22 +43,19 @@ public class StatusProcessor implements Runnable {
         return count;
     }
     
+    public long getId() {
+        return id;
+    }
+    
     /**
      * Creates a hibernate compatible Tweet object.
      */
     private Tweet createTweet() {
-        String lang = "unknown";
-        if (detector != null) {
-            try {
-                lang = detector.detectLanguage(status.getText());
-            } catch (LangDetectException e) {
-                lang = "unknown";
-            }
-        }
+        String lang = status.getIsoLanguageCode();
         
-        String json = DataObjectFactory.getRawJSON(status);
-        String langCodeTmp = status.getIsoLanguageCode();
-        String textTmp = status.getText();
+        //String json = DataObjectFactory.getRawJSON(status);
+        //String langCodeTmp = status.getIsoLanguageCode();
+        //String textTmp = status.getText();
         if (!StatusCrawlerConfig.isInLangs(lang)) {
             return null;
         }
@@ -86,6 +73,7 @@ public class StatusProcessor implements Runnable {
         long tweet_timestamp = status.getCreatedAt().getTime();
         int tweet_timezoneoffset = status.getUser().getUtcOffset() / 3600;
 
+        //String text = status.getText().trim().split("\\s+");
         String text = status.getText().replaceAll("[^a-zA-Z0-9 ]+", "");
         int tweet_charcount = text.length();
         int tweet_wordcount = text.split(" ").length;
@@ -149,7 +137,6 @@ public class StatusProcessor implements Runnable {
     }
 
     public void finish() {
-        System.out.println("Push processor back to pool: " + id);
         status = null;
         pool.setProcessAsleep(this);
     }

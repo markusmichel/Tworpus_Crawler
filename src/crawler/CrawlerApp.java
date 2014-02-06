@@ -2,15 +2,12 @@ package crawler;
 
 import java.io.IOException;
 
-import com.cybozu.labs.langdetect.DetectorFactory;
-import com.cybozu.labs.langdetect.LangDetectException;
-
 public class CrawlerApp {
 	
 	private static CrawlerApp app;
 	private StatusCrawler crawler;
 	
-	public static void main(String[] args) throws LangDetectException, IOException {
+	public static void main(String[] args) throws IOException {
             ///*
             try {
                 StatusCrawlerConfig.loadConfig("crawler_config.cfg");
@@ -41,14 +38,6 @@ public class CrawlerApp {
 			StatusCrawlerConfig.loadConfig("crawler_config.cfg");
 		} catch (InvalidConfigException e) {
 			System.exit(100);
-		}
-
-		
-		try {
-			DetectorFactory.loadProfile(StatusCrawlerConfig.getPROFILE_DIR());
-		} catch (LangDetectException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		
 		app = new CrawlerApp();

@@ -1,7 +1,11 @@
 package crawler;
 
+import db.PersistManager;
+import db.Tweet;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import twitter.OnNewStatusListener;
 import twitter.StatusProcessor;
@@ -19,11 +23,14 @@ public class StatusCrawler {
     private CrawlerApp app;
     private BufferedWriter out;
     private StatusProcessorPool processorPool;
+    private ExecutorService executor;
 
     public StatusCrawler(CrawlerApp app) {
         app.receiveUpdateOfDebugOutput("created crawler");
         this.app = app;
-        processorPool = new StatusProcessorPool(StatusCrawlerConfig.getMaxThreads());
+        // StatusCrawlerConfig.getMaxThreads()
+        processorPool = new StatusProcessorPool(20);
+        executor = Executors.newFixedThreadPool(120);
     }
 
     public void start() {
@@ -35,6 +42,7 @@ public class StatusCrawler {
     }
 
     public void stop() {
+        System.out.println("Shutdown twitter stream");
         twitterStream.shutdown();
         try {
             out.close();
@@ -72,24 +80,19 @@ public class StatusCrawler {
     private long start = System.currentTimeMillis();
 
     public void processNewStatus(Status status) {
-
+        System.out.println("i = " + i++);
+        
+        ///*
         try {
             StatusProcessor processor = processorPool.get();
             processor.setStatus(status);
+            //executor.execute(processor);
             (new Thread(processor)).start();
         } catch (Exception e) {
             System.out.println("PROCESSOR EXCEPTION:");
             e.printStackTrace();
         }
-
-        /* 
-         i++;
-         long diff = System.currentTimeMillis() - start;
-         long s = diff / 1000;
-         if(i % 100 == 0) System.out.println("i: " + i + " in " + s + " s.");
-         StatusProcessor processor = new StatusProcessor(0, status, app, this);
-         processor.writeIntoDatabase();
-         */
+        //*/
     }
 
 }

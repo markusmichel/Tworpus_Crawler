@@ -39,16 +39,16 @@ public class PersistManager {
         tweets.add(tweet);
         tweetsCount++;
         
-        checkAndPersist();
+        //checkAndPersist();
         
-        /*
+        ///*
         Session session = HibernateUtil.getSessionFactory().getCurrentSession();
         Transaction tx = session.beginTransaction();
         session.save(tweet);
         //session.flush();
         //session.clear();
         tx.commit();
-        */
+        //*/
         
         /*
         session.save(tweet);
