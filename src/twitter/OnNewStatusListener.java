@@ -9,10 +9,10 @@ import crawler.StatusCrawler;
 public class OnNewStatusListener implements StatusListener {
 	
 	private StatusCrawler crawler;
-
-
+	
 	public OnNewStatusListener(StatusCrawler crawler) {
 		this.crawler = crawler;
+		
 	}
 
 	@Override
@@ -26,11 +26,11 @@ public class OnNewStatusListener implements StatusListener {
 
 	@Override
 	public void onException(Exception arg0) {
-
 	}
 
 	@Override
-	public void onDeletionNotice(StatusDeletionNotice arg0) {
+	public void onDeletionNotice(StatusDeletionNotice deletion) {
+		crawler.deleteStatus(deletion);
 	}
 
 	@Override
@@ -39,8 +39,6 @@ public class OnNewStatusListener implements StatusListener {
 	}
 
 	@Override
-	public void onStallWarning(StallWarning warning) {
-		// TODO Auto-generated method stub
-		
+	public void onStallWarning(StallWarning warning) {		
 	}
 }

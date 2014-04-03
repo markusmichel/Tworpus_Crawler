@@ -3,28 +3,24 @@ package twitter;
 import twitter4j.HashtagEntity;
 import twitter4j.Status;
 
-import crawler.StatusCrawlerConfig;
-import crawler.StatusProcessorPool;
-import db.HibernateUtil;
-import db.Tweet;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import twitter4j.json.DataObjectFactory;
+import com.mongodb.BasicDBList;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
 
+/**
+ * @deprecated Relict from last version. Just exists because of createTweet method.
+ */
 public class StatusProcessor implements Runnable {
 
     private Status status;
-    private int count;
-    private final long id;
-    private final StatusProcessorPool pool;
-    private Session session;
-    private Transaction transaction;
+    
+    private DBCollection collection;
+    private DB db;
 
-    public StatusProcessor(long id, StatusProcessorPool pool) {
-        this.pool = pool;
-        this.id = id;
-        session = HibernateUtil.getSessionFactory().openSession();
-        transaction = session.beginTransaction();
+    public StatusProcessor(long id, DBCollection coll, DB database) {        
+        collection = coll;
+        db = database;
     }
 
     public void setStatus(Status status) {
@@ -35,30 +31,8 @@ public class StatusProcessor implements Runnable {
         return this.status;
     }
     
-    /**
-     * Return the number of items in the processor's session
-     * which aren't yet persisted to the database.
-     */
-    public int getCount() {
-        return count;
-    }
-    
-    public long getId() {
-        return id;
-    }
-    
-    /**
-     * Creates a hibernate compatible Tweet object.
-     */
-    private Tweet createTweet() {
-        String lang = status.getIsoLanguageCode();
-        
-        //String json = DataObjectFactory.getRawJSON(status);
-        //String langCodeTmp = status.getIsoLanguageCode();
-        //String textTmp = status.getText();
-        if (!StatusCrawlerConfig.isInLangs(lang)) {
-            return null;
-        }
+    public static BasicDBObject createTweet(Status status) {
+        String lang = status.getLang();
 
         long tweet_id = status.getId();
         long user_id = status.getUser().getId();
@@ -73,72 +47,46 @@ public class StatusProcessor implements Runnable {
         long tweet_timestamp = status.getCreatedAt().getTime();
         int tweet_timezoneoffset = status.getUser().getUtcOffset() / 3600;
 
-        //String text = status.getText().trim().split("\\s+");
         String text = status.getText().replaceAll("[^a-zA-Z0-9 ]+", "");
         int tweet_charcount = text.length();
         int tweet_wordcount = text.split(" ").length;
-
-        Tweet tweet = new Tweet();
-        tweet.setId(tweet_id);
-        tweet.setUserid(user_id);
-        tweet.setTimestamp(tweet_timestamp);
-        tweet.setTimezoneoffset(tweet_timezoneoffset);
-        tweet.setCharcount((byte) tweet_charcount); // @TODO check loss of precision
-        tweet.setWordcount((byte) tweet_wordcount);
-        tweet.setLatitude((float) tweet_latitude);
-        tweet.setLongitude((float) tweet_longitude);
-
-        //System.out.println("lang: " + status.getUser().getLang());
         
-        return tweet;
-
-        /*
-         if (status.getHashtagEntities().length > 0) {
-         for (HashtagEntity tag : status.getHashtagEntities()) {
-                            
-         int id = db.insertHashTag(tag.getText());
-         if (id != -1)
-         db.insertTweetToTagRelation(tweet_id, id);
-         }
-         }
-         */
-        /*
-         db.insertTweetAndCloseDatabase(tweet_id, user_id, tweet_timestamp, tweet_timezoneoffset, tweet_charcount,
-         tweet_wordcount, user_location, user_lang, tweet_lang, tweet_latitude,
-         tweet_longitude);
-         */
-    }
-    
-    private void save(Tweet tweet) {
-        if(tweet == null) return;
-        count++;
-        try {
-            session.save(tweet);
-        } catch(Exception e) {
-            e.printStackTrace();
-        }
+        BasicDBObject object = new BasicDBObject()
+                .append("text", status.getText())
+                .append("tweetid", tweet_id)
+                .append("userid", user_id)
+                .append("timestamp", tweet_timestamp)
+                .append("timezone_offset", tweet_timezoneoffset)
+                .append("charcount", tweet_charcount)
+                .append("wordcount", tweet_wordcount)
+                .append("latitude", tweet_latitude)
+                .append("longitude", tweet_longitude)
+                .append("language", lang);
         
-        System.out.println("count = " + count + " id=" + id);
-        if(count >= 100) {
-            System.out.println("save at count = " + count + " id=" + id);
-            count = 0;
-            session.flush();
-            session.clear();
+        BasicDBList hashtags = new BasicDBList();
+        if(status.getHashtagEntities().length > 0) {
+            for(HashtagEntity tag : status.getHashtagEntities())
+                hashtags.add(tag.getText());
         }
+        object.append("hashtags", hashtags);
+        
+        return object;
     }
- 
+
+    private BasicDBObject createTweet() {
+        return createTweet(status);
+    }
+
     @Override
     public void run() {
-        if (status == null) return;
-        
-        Tweet tweet = createTweet();
-        save(tweet);
-        finish();
-    }
+        if (status == null) {
+            return;
+        }
 
-    public void finish() {
-        status = null;
-        pool.setProcessAsleep(this);
+        BasicDBObject tweet = createTweet();
+        db.requestStart();
+        collection.insert(tweet);
+        db.requestDone();
     }
 
 }
