@@ -7,6 +7,7 @@ The crawler only saves metadata - no content!
 ## requires
 - twitter4j fork: https://github.com/markusmichel/twitter4j
 - mongo-java-driver (tested with 2.9.3)
+- MongoDB
 
 ## config
 MongoDB is excepted to run on `localhost:27017`.
